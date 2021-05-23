@@ -6,11 +6,11 @@
   ```bash
   mkdir -p build
   cd build
-  qmake ../QtRoot.pro
+  qmake ../imagerQt.pro
   make
   ```
 - Run:
 ```bash
     cd ..
-    build/QtRoot
+    build/ImagerQt
 ```
