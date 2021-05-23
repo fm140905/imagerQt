@@ -1,0 +1,16 @@
+<RCC>
+    <qresource prefix="/icons">
+        <file>icons/stop.svg</file>
+        <file>icons/close.svg</file>
+        <file>icons/reload.svg</file>
+        <file>icons/start.svg</file>
+        <file>icons/open.svg</file>
+        <file>icons/about.svg</file>
+        <file>icons/save.svg</file>
+    </qresource>
+    <qresource prefix="/Data">
+        <file>Data/cones_all_channels.txt</file>
+        <file>Data/cones_ideal.txt</file>
+        <file>Data/cones_selected_channels.txt</file>
+    </qresource>
+</RCC>
