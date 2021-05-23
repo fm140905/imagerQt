@@ -40,7 +40,7 @@ void Worker::run()
         }
     }
     conefile.close();
-    qDebug() << "Worker thread exited.";
+//    qDebug() << "Worker thread exited.";
 }
 
 void Worker::stopExecution()

@@ -1,16 +1,16 @@
-# QtRoot Project
+# Simple GUI application for back projection image reconstruction
 
-invoke root class in Qt Project.
-
-## Todo
-### 2019-03-30
-- compile QRootCanvas lib
-- write QRootCanvas widget.
-
-## Update
-### 2019-03-30
-- Embedded TCanvas works well! (Linux Only. macOS not work. Windows not test.)
-- [Single TCanvas Window](https://github.com/mission-young/QSingleTCanvas) works well on Linux,macOS. Windows not test.
-
-- TFile,TTree,Int_t(basic type),TString works well.
-- class TRootEmbeddedCanvas is one the way.
+## Use
+- Install [ROOT](https://root.cern/install/) (v6.22 or above), `qmake` and `make`.
+- Compile:
+  ```bash
+  mkdir -p build
+  cd build
+  qmake ../QtRoot.pro
+  make
+  ```
+- Run:
+```bash
+    cd ..
+    build/QtRoot
+```

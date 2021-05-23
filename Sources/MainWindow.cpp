@@ -284,7 +284,7 @@ void MainWindow::handleSaveAs()
 
 void MainWindow::handleClose()
 {
-    qDebug() << "Close clicked";
+//    qDebug() << "Close clicked";
     this->close();
 }
 

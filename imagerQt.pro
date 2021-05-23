@@ -8,7 +8,7 @@ QT       += core gui
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-TARGET = QtRoot
+TARGET = ImagerQt
 TEMPLATE = app
 
 # The following define makes your compiler emit warnings if you use
@@ -22,25 +22,28 @@ DEFINES += QT_DEPRECATED_WARNINGS
 # You can also select to disable deprecated APIs only up to a certain version of Qt.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
+# No debug output
+CONFIG(release, debug|release): DEFINES += QT_NO_DEBUG_OUTPUT
+
 CONFIG += c++11
 
 SOURCES += \
-        main.cpp \
-    MainWindow.cpp \
-    qrootcanvas.cpp \
-    reconstruction.cpp \
-    setup.cpp \
-    worker.cpp
+        $$PWD/Sources/main.cpp \
+    $$PWD/Sources/MainWindow.cpp \
+    $$PWD/Sources/qrootcanvas.cpp \
+    $$PWD/Sources/reconstruction.cpp \
+    $$PWD/Sources/setup.cpp \
+    $$PWD/Sources/worker.cpp
 
 HEADERS += \
-    MainWindow.h \
-    qrootcanvas.h \
-    readerwriterqueue/atomicops.h \
-    readerwriterqueue/readerwritercircularbuffer.h \
-    readerwriterqueue/readerwriterqueue.h \
-    reconstruction.h \
-    setup.h \
-    worker.h
+    $$PWD/Headers/MainWindow.h \
+    $$PWD/Headers/qrootcanvas.h \
+    $$PWD/Headers/readerwriterqueue/atomicops.h \
+    $$PWD/Headers/readerwriterqueue/readerwritercircularbuffer.h \
+    $$PWD/Headers/readerwriterqueue/readerwriterqueue.h \
+    $$PWD/Headers/reconstruction.h \
+    $$PWD/Headers/setup.h \
+    $$PWD/Headers/worker.h
 
 FORMS += \
     MainWindow.ui
@@ -50,7 +53,9 @@ QMAKE_CXXFLAGS += -fopenmp
 LIBS += -fopenmp
 
 INCLUDEPATH += \
-    $(ROOTSYS)/include
+    $(ROOTSYS)/include \
+    $$PWD/Headers
+
 LIBS += \
     -L$(ROOTSYS)/lib -lCore -lImt -lRIO -lNet -lHist -lGraf \
     -lGraf3d -lGpad -lTree -lTreePlayer -lRint -lPostscript -lMatrix \
@@ -64,6 +69,7 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
 DISTFILES += \
+    .gitignore \
     README.md \
     readerwriterqueue/LICENSE.md \
     readerwriterqueue/README.md
