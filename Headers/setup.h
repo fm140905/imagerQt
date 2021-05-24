@@ -7,10 +7,6 @@
 #include <stdexcept>
 
 #include <QString>
-#include <QStringRef>
-
-#include "readerwriterqueue/atomicops.h"
-#include "readerwriterqueue/readerwriterqueue.h"
 
 class Vector3D
 {
@@ -115,7 +111,7 @@ public:
     // queue capacity
     ulong capacity=1024;
     // max number of cones to process
-    ulong maxN=2000;
+    ulong maxN=1000;
 };
 
 class Cone
@@ -159,7 +155,5 @@ public:
         Edpst = record.mid(74, 13).toDouble();
     }
 };
-
-typedef moodycamel::BlockingReaderWriterQueue<Cone> SPSC;
 
 #endif // SETUP_H

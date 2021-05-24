@@ -18,13 +18,6 @@ int main(int argc, char *argv[])
     w.resize(w.sizeHint());
     w.show();
     w.resize(700,700);
-    w.run();
 
-    if (!w.aborted) {
-        return a.exec();
-    }
-    else {
-        gSystem->Sleep(500);
-        return 0;
-    }
+    return a.exec();
 }

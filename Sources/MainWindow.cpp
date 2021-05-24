@@ -16,10 +16,9 @@
 #include <QTimer>
 #include <QDebug>
 #include <QWindow>
-
+#include <QFileDialog>
+#include <QDateTime>
 #include <QMessageBox>
-
-#include "reconstruction.h"
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -30,27 +29,33 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionExit, &QAction::triggered, this, &MainWindow::handleClose);
     connect(ui->actionSave, &QAction::triggered, this, &MainWindow::handleSave);
     connect(ui->actionSave_As, &QAction::triggered, this, &MainWindow::handleSaveAs);
-
-    connect(ui->actionStart, &QAction::triggered, this, &MainWindow::handleStart);
-    connect(ui->actionStop, &QAction::triggered, this, &MainWindow::handleStop);
-    connect(ui->actionClear, &QAction::triggered, this, &MainWindow::handleClear);
-
+    connect(ui->actionScreenshot, &QAction::triggered, this, &MainWindow::handleScreenshot);
     connect(ui->actionAbout, &QAction::triggered, this, &MainWindow::handleAbout);
 
     config = new Setup(Vector3D(SOURCE_X, SOURCE_Y, SOURCE_Z));
-    coneQueue = new SPSC(config->capacity);
+    image = new RecoImage(config);
+    createGridlines();
+    createCountsLabel();
 
-    workerThread = new Worker(this, config, coneQueue);
+    // update image on worker thread
+    workerThread = new Worker(this, config, image);
     connect(workerThread, &Worker::finished, workerThread, &QObject::deleteLater);
     connect(workerThread, &Worker::finished, this, &MainWindow::notifyThreadFinished);
+    connect(ui->actionStart, &QAction::triggered, workerThread, &Worker::handleStart);
+    connect(ui->actionStop, &QAction::triggered, workerThread, &Worker::handleStop);
+    connect(ui->actionClear, &QAction::triggered, workerThread, &Worker::handleClear);
     connect(this, &MainWindow::threadStopped, workerThread, &Worker::stopExecution);
     workerThread->start();
 
-    createHist();
-    createGridlines();
-    createCountsLabel();
+    // update every 0.1 second
+    QTimer *timer = new QTimer(this);
+    connect(timer, &QTimer::timeout, this, QOverload<>::of(&MainWindow::redraw));
+    timer->start(100);
+
+    setWindowTitle(tr("Back projection"));
     ui->canvas->Canvas()->Modified();
     ui->canvas->Canvas()->Update();
+    ui->statusBar->showMessage("Ready.");
 }
 
 void MainWindow::changeEvent(QEvent *e)
@@ -78,22 +83,21 @@ void MainWindow::closeEvent (QCloseEvent *event)
     if (resBtn != QMessageBox::Yes) {
         event->ignore();
     } else {
-        finished=true;
         if (workerThread) {
 //            qDebug() << "Exiting thread..";
-            aborted=true;
             // send stop signal to worker thread
+            aborted=true;
             emit threadStopped();
         }
-//        event->accept();
+        event->accept();
     }
 }
 
 MainWindow::~MainWindow()
 {
     delete ui;
-    if (coneQueue)
-        delete coneQueue;
+    if (image)
+        delete image;
     if (config)
         delete config;
     for (int i = 0; i < longitudes.size(); ++i) {
@@ -108,74 +112,6 @@ MainWindow::~MainWindow()
     }
 }
 
-void MainWindow::run()
-{
-    std::vector<Cone> cones(config->chuckSize);
-    bool emptyQueue = false;
-    while (!finished)
-    {
-        if (!stop)
-        {
-            int i(0);
-            while (i < config->chuckSize)
-            {
-                emptyQueue = !(coneQueue->wait_dequeue_timed(cones[i],
-                                                           std::chrono::milliseconds(10)));
-                if (emptyQueue) break;
-                i++;
-            }
-            // update image
-            updateImage(cones.cbegin(), cones.cbegin() + i, true);
-            if (emptyQueue && threadExecutionFinished)
-            {
-                // stop updating after this final run
-                finished = true;
-//                qDebug() << "Processing finished.";
-                QMessageBox messageBox;
-                messageBox.setText("Image reconstruction finished.");
-                messageBox.setWindowTitle("Finished");
-                messageBox.exec();
-                break;
-            }
-            // gSystem->Sleep(100);
-        }
-        QApplication::processEvents();
-    }
-}
-
-void MainWindow::updateImage(std::vector<Cone>::const_iterator first,
-                             std::vector<Cone>::const_iterator last,
-                             const bool& normalized)
-{
-    if (first == last)
-        return;
-    // update image
-    if (normalized)
-        addConesNormalized(config, hist, counts, first, last);
-    else
-        addCones(config, hist, counts, first, last);
-    // redraw
-    redraw();
-}
-
-void MainWindow::createHist()
-{
-    hist = new TH2D("ROI", " ; Azimuth (degree); Elevation (degree)",
-                    config->phiBins, -180, 180,
-                    config->thetaBins, -90, 90);
-    // init image
-    for (int i = 0; i < config->phiBins; i++)
-    {
-        for (int j = 0; j < config->thetaBins; j++)
-        {
-            hist->SetBinContent(i+1, j+1, 0);
-        }
-    }
-    gStyle->SetOptStat(0);
-    hist->GetZaxis()->SetLabelSize(0.02);
-    hist->Draw("z aitoff");
-
-}
 
 void MainWindow::createGridlines()
 {
@@ -234,7 +170,7 @@ void MainWindow::createGridlines()
 
 void MainWindow::createCountsLabel()
 {
-    std::string strtmp = "Total counts: " + std::to_string(counts);
+    std::string strtmp = "Total counts: " + std::to_string(image->counts);
     countsText = new TText(0.7, 0.92, strtmp.c_str());
     countsText->SetTextSizePixels(5);
     countsText->SetNDC(kTRUE);
@@ -261,10 +197,12 @@ void MainWindow::aitoff2xy(const double& l, const double& b, double &Al, double 
 
 void MainWindow::redraw()
 {
-    std::string strtmp = "Total counts: " + std::to_string(counts);
+    image->mMutex.lock();
+    std::string strtmp = "Total counts: " + std::to_string(image->counts);
     countsText->SetText(0.7, 0.92, strtmp.c_str());
     ui->canvas->Canvas()->Modified();
     ui->canvas->Canvas()->Update();
+    image->mMutex.unlock();
 }
 
 void MainWindow::handleOpen()
@@ -272,53 +210,78 @@ void MainWindow::handleOpen()
     qDebug() << "Open file clicked";
 }
 
-void MainWindow::handleSave()
+bool MainWindow::handleSave()
 {
-    qDebug() << "Save clicked";
+//    qDebug() << "Save clicked";
+    if (curFile.isEmpty()) {
+        return handleSaveAs();
+    } else {
+        return saveCanvas(curFile);
+    }
 }
 
-void MainWindow::handleSaveAs()
+bool MainWindow::handleSaveAs()
 {
-    qDebug() << "Save as clicked";
+    QString fileName = QFileDialog::getSaveFileName(this,
+            tr("Save Image"), "",
+            tr("PNG file (*.png);;ROOT file (*.root);;C file (*.C);;text file (*.txt)"));
+    if (fileName.isEmpty())
+        return false;
+    else {
+        if (saveCanvas(fileName))
+            curFile = fileName;
+    }
 }
 
+bool MainWindow::saveCanvas(const QString& fileName)
+{
+    QFileInfo fileInfo(fileName);
+    QString ext=fileInfo.completeSuffix();
+    bool saved=false;
+    if (ext == "root" || ext == "png" || ext == "C") {
+//        qDebug() << "Save as " << ext << " file.";
+        image->mMutex.lock();
+        ui->canvas->Canvas()->SaveAs(fileName.toLocal8Bit().constData());
+        image->mMutex.unlock();
+        saved = true;
+    }
+    else if (ext == "txt") {
+        saved = image->saveImage(fileName);
+    }
+    if (saved)
+    {
+        ui->statusBar->showMessage(QString("Image saved to: %1").arg(fileName));
+    }
+    return saved;
+}
 void MainWindow::handleClose()
 {
 //    qDebug() << "Close clicked";
     this->close();
 }
 
-void MainWindow::handleStart()
+void MainWindow::handleScreenshot()
 {
-    stop=false;
-//    qDebug() << "Start clicked";
+    QDateTime dateTime = QDateTime::currentDateTime();
+    QString currentDateTime = dateTime.toString("yyyy-MM-dd-HH-mm-ss");
+    QString fileName = QString("Screenshot-%1.png").arg(currentDateTime);
+    saveCanvas(fileName);
 }
-
-void MainWindow::handleStop()
-{
-    stop=true;
-//    qDebug() << "Stop clicked";
-}
-
-void MainWindow::handleClear()
-{
-    counts = 0;
-    hist->Reset();
-    redraw();
-//    qDebug() << "Clear clicked";
-}
-
 void MainWindow::handleAbout()
 {
-    QMessageBox messageBox;
-    messageBox.setText("This application is created using Qt 5.13.2. Source code is available at Gitlab.");
-    messageBox.setWindowTitle("About");
-    messageBox.exec();
+    QMessageBox::about(this, tr("About Application"),
+             tr("This application is created using Qt 5.13.2. Source code is available at Gitlab."));
 //    qDebug() << "About clicked";
 }
 
 void MainWindow::notifyThreadFinished()
 {
     // pop up a message box indicating processing is finished.
-    threadExecutionFinished = true;
+    if (!aborted)
+    {
+        QMessageBox messageBox;
+        messageBox.setText("Image reconstruction finished.");
+        messageBox.setWindowTitle("Finished");
+        messageBox.exec();
+    }
 }

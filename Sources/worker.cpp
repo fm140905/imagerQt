@@ -19,31 +19,46 @@ void Worker::run()
     QTextStream in(&conefile);
     // skip header (first line)
     in.readLineInto(&line);
-    ulong counts(0);
-    while(!stop) {
-        //some work to get data (read board or file)
-        int i(0);
-        while (!stop && i < config->chuckSize && in.readLineInto(&line))
+    std::vector<Cone> cones(config->chuckSize, Cone());
+    while(!exitted)
+    {
+        if (!stopped)
         {
-            coneQueue->enqueue(Cone(line));
-            i++;
-        }
-        counts+=i;
-        if (stop || line.isNull() || counts >= config->maxN)
-        {
-            break;
-        }
-
-        while (!stop && coneQueue->size_approx() >= config->capacity)
-        {
-            gSystem->Sleep(50);
+            //some work to get data (read board or file)
+            int i(0);
+            while (!exitted && i < config->chuckSize && in.readLineInto(&line))
+            {
+                cones[i]=Cone(line);
+                i++;
+            }
+            localCounts+=i;
+            // update image
+            image->updateImage(cones.cbegin(), cones.cbegin()+i, true);
+            if (exitted || line.isNull() || localCounts >= config->maxN)
+                break;
         }
     }
     conefile.close();
-//    qDebug() << "Worker thread exited.";
+    qDebug() << "Worker thread exited.";
+}
+
+void Worker::handleStart()
+{
+    stopped=false;
+}
+
+void Worker::handleStop()
+{
+    stopped=true;
 }
 
 void Worker::stopExecution()
 {
-    stop = true;
+    exitted = true;
+}
+
+void Worker::handleClear()
+{
+    localCounts = 0;
+    image->clear();
 }

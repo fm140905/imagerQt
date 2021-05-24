@@ -7,6 +7,8 @@
         <file>icons/open.svg</file>
         <file>icons/about.svg</file>
         <file>icons/save.svg</file>
+        <file>icons/saveas.png</file>
+        <file>icons/screenshot.svg</file>
     </qresource>
     <qresource prefix="/Data">
         <file>Data/cones_all_channels.txt</file>

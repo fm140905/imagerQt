@@ -38,9 +38,6 @@ SOURCES += \
 HEADERS += \
     $$PWD/Headers/MainWindow.h \
     $$PWD/Headers/qrootcanvas.h \
-    $$PWD/Headers/readerwriterqueue/atomicops.h \
-    $$PWD/Headers/readerwriterqueue/readerwritercircularbuffer.h \
-    $$PWD/Headers/readerwriterqueue/readerwriterqueue.h \
     $$PWD/Headers/reconstruction.h \
     $$PWD/Headers/setup.h \
     $$PWD/Headers/worker.h

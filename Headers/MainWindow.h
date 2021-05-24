@@ -26,19 +26,13 @@ public:
     explicit MainWindow(QWidget *parent = nullptr);
     virtual void changeEvent(QEvent *e);
     ~MainWindow();
-    // reconstruct images
-    void run();
     void closeEvent (QCloseEvent *event);
-    bool aborted=false;
 public slots:
 
 private:
     Ui::MainWindow *ui;
     Setup* config;
-    SPSC* coneQueue;
-    TH2D* hist;
-    void createHist();
-    ULong64_t counts=0;
+    RecoImage* image;
     TText* countsText;
     void createCountsLabel();
     // gridlines
@@ -47,32 +41,21 @@ private:
     void aitoff2xy(const double& l, const double& b, double &Al, double &Ab);
     void createGridlines();
     void redraw();
-//    void createSourceMarker();
     // worker thread responsible for image reconstruction
     Worker* workerThread;
-    bool threadExecutionFinished=false;
-    bool finished=false;
-    bool stop=true;
+    bool aborted=false;
 
-//    bool closed=false;
-//    void customClose();
-    // update image
-    void updateImage(std::vector<Cone>::const_iterator first,
-                     std::vector<Cone>::const_iterator last,
-                     const bool& normalized=true);
+    bool saveCanvas(const QString& fileName);
+    QString curFile;
 
 protected:
 
 private slots:
     void handleOpen();
-    void handleSave();
-    void handleSaveAs();
+    bool handleSave();
+    bool handleSaveAs();
     void handleClose();
-
-    void handleStart();
-    void handleStop();
-    void handleClear();
-
+    void handleScreenshot();
     void handleAbout();
 
     void notifyThreadFinished();

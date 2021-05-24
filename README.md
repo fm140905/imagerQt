@@ -6,7 +6,7 @@
   ```bash
   mkdir -p build
   cd build
-  qmake ../imagerQt.pro
+  qmake CONFIG+=realease ../imagerQt.pro
   make
   ```
 - Run:
