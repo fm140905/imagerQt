@@ -1,13 +1,12 @@
 #include "TStyle.h"
 #include "TAxis.h"
 #include <fstream>
-#include <QFileInfo>
-#include <QDebug>
+#include <iostream>
+#include "omp.h"
 #include "reconstruction.h"
 
 RecoImage::RecoImage(const Setup* config_):
-    config(config_),
-    mMutex()
+    config(config_)
 {
     counts=0;
     createHist();
@@ -45,26 +44,18 @@ void RecoImage::clear()
     mMutex.unlock();
 }
 
-bool RecoImage::saveImage(const QString& fileName)
+bool RecoImage::saveImage(const std::string& fileName)
 {
-    // save image
-    QFileInfo fileInfo(fileName);
-    QString ext=fileInfo.completeSuffix();
-    if(ext == "txt"){
 //        qDebug() << "Save as text file";
-        mMutex.lock();
-        bool saved=hist2txt(fileName);
-        mMutex.unlock();
-        return saved;
-    }
-    else {
-        return false;
-    }
+    mMutex.lock();
+    bool saved=hist2txt(fileName);
+    mMutex.unlock();
+    return saved;
 }
 
-bool RecoImage::hist2txt(const QString& fileName)
+bool RecoImage::hist2txt(const std::string& fileName)
 {
-    std::ofstream outf(fileName.toLocal8Bit().constData());
+    std::ofstream outf(fileName.c_str());
     if (!outf.good())
     {
         return false;
@@ -83,6 +74,7 @@ bool RecoImage::hist2txt(const QString& fileName)
         }
     }
 //    qDebug() << "Text file saved.";
+    return true;
 }
 
 void RecoImage::updateImage(std::vector<Cone>::const_iterator first,
@@ -122,7 +114,7 @@ int RecoImage::addCones(std::vector<Cone>::const_iterator first,
         E2 = k->E0 - k->Edpst;
         sgma2 = std::pow(k->Edpst/std::pow(k->E0, 2) , 2) + std::pow(1/E2 - E2/std::pow(k->E0, 2) , 2);
         sgma2 *= std::pow(config->sgmE * 0.511, 2);
-        #pragma omp parallel for private(ray, beta, sgmb2)
+        #pragma omp parallel for private(ray, beta, sgmb2) collapse(2)
         for (int i = 0; i < config->thetaBins; i++)
         {
             for (int j = 0; j < config->phiBins; j++)

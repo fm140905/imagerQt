@@ -2,8 +2,7 @@
 #define RECONSTRUCTION_H
 
 
-#include <QMutex>
-#include <QString>
+#include <mutex>
 #include "TH2D.h"
 #include "setup.h"
 
@@ -12,11 +11,11 @@ class RecoImage
 public:
     RecoImage(const Setup* config_);
     ~RecoImage();
-    QMutex mMutex;
+    std::mutex mMutex;
     ULong64_t counts=0;
 
     void clear();
-    bool saveImage(const QString& fileName);
+    bool saveImage(const std::string& fileName);
     void updateImage(std::vector<Cone>::const_iterator first,
                      std::vector<Cone>::const_iterator last,
                      const bool normailzed=true);
@@ -24,7 +23,7 @@ private:
     const Setup* config;
     TH2D* hist;
     void createHist();
-    bool hist2txt(const QString& fileName);
+    bool hist2txt(const std::string& fileName);
 
     /**
      * @brief Project cones onto the sphereical surface and update the image.

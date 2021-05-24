@@ -76,10 +76,10 @@ void MainWindow::changeEvent(QEvent *e)
 
 void MainWindow::closeEvent (QCloseEvent *event)
 {
-    QMessageBox::StandardButton resBtn = QMessageBox::question( this, "Close",
-                                                                tr("Are you sure you want to quit?\n"),
-                                                                QMessageBox::Cancel | QMessageBox::No | QMessageBox::Yes,
-                                                                QMessageBox::Yes);
+    QMessageBox::StandardButton resBtn = QMessageBox::question(this, "Close",
+                                                               tr("Are you sure you want to quit?\n"),
+                                                               QMessageBox::Cancel | QMessageBox::No | QMessageBox::Yes,
+                                                               QMessageBox::Yes);
     if (resBtn != QMessageBox::Yes) {
         event->ignore();
     } else {
@@ -88,6 +88,7 @@ void MainWindow::closeEvent (QCloseEvent *event)
             // send stop signal to worker thread
             aborted=true;
             emit threadStopped();
+            gSystem->Sleep(500);
         }
         event->accept();
     }
@@ -246,7 +247,7 @@ bool MainWindow::saveCanvas(const QString& fileName)
         saved = true;
     }
     else if (ext == "txt") {
-        saved = image->saveImage(fileName);
+        saved = image->saveImage(fileName.toStdString());
     }
     if (saved)
     {

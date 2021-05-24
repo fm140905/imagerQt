@@ -67,9 +67,7 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 
 DISTFILES += \
     .gitignore \
-    README.md \
-    readerwriterqueue/LICENSE.md \
-    readerwriterqueue/README.md
+    README.md
 
 RESOURCES += \
     resources.qrc
