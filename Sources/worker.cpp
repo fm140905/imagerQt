@@ -58,6 +58,7 @@ void Worker::handleStop()
 void Worker::stopExecution()
 {
     exitted = true;
+    qDebug() << "Exiting thread signal received.";
 }
 
 void Worker::handleClear()

@@ -71,6 +71,7 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 
 DISTFILES += \
     .gitignore \
+    Demo/Demo.gif \
     README.md
 
 RESOURCES += \

@@ -1,15 +1,20 @@
 # Simple GUI application for back projection image reconstruction
 
-## Use
-- Install [ROOT](https://root.cern/install/) (v6.22 or above), `qmake` and `make`.
-- Compile:
+## Prerequisites
+- Install [ROOT v6](https://root.cern/install/).
+- Install qt5 development packages
+```bash
+sudo apt-get install qt5-default qtdeclarative5-dev
+```
+
+## Build
   ```bash
   mkdir -p build
   cd build
-  qmake CONFIG+=realease ../imagerQt.pro
+  qmake -config release ../imagerQt.pro
   make
   ```
-- Run:
+## Run
 ```bash
     cd ..
     build/ImagerQt
