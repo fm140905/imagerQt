@@ -47,14 +47,18 @@ FORMS += \
 
 QMAKE_LFLAGS += -fopenmp
 QMAKE_CXXFLAGS += -fopenmp
+#QMAKE_CXXFLAGS += -fsanitize=address
+#QMAKE_LFLAGS += -fsanitize=address
 LIBS += -fopenmp
 
+
+
 INCLUDEPATH += \
-    $(ROOTSYS)/include \
+    $$(ROOTSYS)/include \
     $$PWD/Headers
 
 LIBS += \
-    -L$(ROOTSYS)/lib -lCore -lImt -lRIO -lNet -lHist -lGraf \
+    -L$$(ROOTSYS)/lib -lCore -lImt -lRIO -lNet -lHist -lGraf \
     -lGraf3d -lGpad -lTree -lTreePlayer -lRint -lPostscript -lMatrix \
     -lPhysics -lMathCore -lThread -lMultiProc -pthread -lm -ldl -rdynamic
 

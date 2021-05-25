@@ -111,7 +111,7 @@ public:
     // queue capacity
     ulong capacity=1024;
     // max number of cones to process
-    ulong maxN=1000;
+    ulong maxN=10000;
 };
 
 class Cone

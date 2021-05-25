@@ -164,6 +164,10 @@ int RecoImage::addConesNormalized(std::vector<Cone>::const_iterator first,
         {
             for (int j = 0; j < config->phiBins; j++)
             {
+		// if (i==0&&j==0)
+		// {
+		//     std::cout << omp_get_num_threads() << '\n';
+		// }
                 ray = k->apex - config->xbs[i][j];
                 beta = getCosAngle(ray, k->axis);
                 sgmb2 = std::pow((ray/(ray*ray) + k->axis/(k->axis*k->axis)-

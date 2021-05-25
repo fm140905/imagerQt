@@ -31,10 +31,13 @@ void Worker::run()
                 cones[i]=Cone(line);
                 i++;
             }
+            if (exitted)
+                break;
             localCounts+=i;
             // update image
             image->updateImage(cones.cbegin(), cones.cbegin()+i, true);
-            if (exitted || line.isNull() || localCounts >= config->maxN)
+//            if (exitted || in.atEnd() || localCounts >= config->maxN)
+            if (exitted || localCounts >= config->maxN)
                 break;
         }
     }

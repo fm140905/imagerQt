@@ -50,7 +50,7 @@ MainWindow::MainWindow(QWidget *parent) :
     // update every 0.1 second
     QTimer *timer = new QTimer(this);
     connect(timer, &QTimer::timeout, this, QOverload<>::of(&MainWindow::redraw));
-    timer->start(100);
+    timer->start(1000);
 
     setWindowTitle(tr("Back projection"));
     ui->canvas->Canvas()->Modified();
@@ -99,6 +99,8 @@ MainWindow::~MainWindow()
     delete ui;
     if (image)
         delete image;
+    if (countsText)
+        delete countsText;
     if (config)
         delete config;
     for (int i = 0; i < longitudes.size(); ++i) {
@@ -226,12 +228,11 @@ bool MainWindow::handleSaveAs()
     QString fileName = QFileDialog::getSaveFileName(this,
             tr("Save Image"), "",
             tr("PNG file (*.png);;ROOT file (*.root);;C file (*.C);;text file (*.txt)"));
-    if (fileName.isEmpty())
-        return false;
-    else {
-        if (saveCanvas(fileName))
-            curFile = fileName;
+    if (!fileName.isEmpty() && saveCanvas(fileName)){
+        curFile = fileName;
+        return true;
     }
+    return false;
 }
 
 bool MainWindow::saveCanvas(const QString& fileName)
@@ -240,7 +241,7 @@ bool MainWindow::saveCanvas(const QString& fileName)
     QString ext=fileInfo.completeSuffix();
     bool saved=false;
     if (ext == "root" || ext == "png" || ext == "C") {
-//        qDebug() << "Save as " << ext << " file.";
+        qDebug() << "Save as " << ext << " file.";
         image->mMutex.lock();
         ui->canvas->Canvas()->SaveAs(fileName.toLocal8Bit().constData());
         image->mMutex.unlock();
